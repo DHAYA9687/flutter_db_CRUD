@@ -31,32 +31,101 @@ class _RealTimeCRUDDBState extends State<RealTimeCRUDDB> {
       body: Column(
         children: [
           Expanded(
-              child: FirebaseAnimatedList(
-            query: db,
-            itemBuilder: (BuildContext context, DataSnapshot snapshot,
-                Animation<double> animation, int index) {
-              return Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                margin: EdgeInsets.all(10),
-                child: ListTile(
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 10, vertical: 50),
-                  leading: CircleAvatar(
-                    child: Text((index + 1).toString()),
+            child: FirebaseAnimatedList(
+              query: db,
+              itemBuilder: (BuildContext context, DataSnapshot snapshot,
+                  Animation<double> animation, int index) {
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  title: Text(
-                    snapshot.child("name").value.toString(),
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                  margin: EdgeInsets.all(10),
+                  child: ListTile(
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 50),
+                    leading: CircleAvatar(
+                      child: Text((index + 1).toString()),
+                    ),
+                    title: Text(
+                      snapshot.child("name").value.toString(),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                    ),
+                    subtitle: Text(
+                      snapshot.child("address").value.toString(),
+                    ),
+                    trailing: PopupMenuButton(
+                      icon: const Icon(Icons.more_vert),
+                      itemBuilder: (context) => [
+                        //for update the items
+                        //if we need to change any data in db then we can use update operation
+                        PopupMenuItem(
+                          value: 1,
+                          child: ListTile(
+                            title: Text('Edit'),
+                            onTap: () {
+                              nameController.text =
+                                  snapshot.child("name").value.toString();
+                              addressController.text =
+                                  snapshot.child("address").value.toString();
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return myDialogBox(
+                                    context: context,
+                                    name: "Update Items",
+                                    address: "Update",
+                                    onPressed: () {
+                                      db.child(snapshot.key!).update(
+                                        {
+                                          'name':
+                                              nameController.text.toString(),
+                                          'address':
+                                              addressController.text.toString(),
+                                        },
+                                      ).then((_) {
+                                        // ignore: _print
+                                        print("success");
+                                      }).catchError((err) {
+                                        print("$err");
+                                      });
+                                      nameController.clear();
+                                      addressController.clear();
+                                      // ignore: use_build_context_synchronously
+                                      Navigator.pop(context);
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                            leading: Icon(Icons.edit),
+                          ),
+                        ),
+                        //for delete the items
+                        //if we need to delete any data in db then we can use delete operation
+                        PopupMenuItem(
+                          value: 2,
+                          child: ListTile(
+                            title: Text('Delete'),
+                            onTap: () {
+                              db.child(snapshot.key!).remove().then((_) {
+                                // ignore: _print
+                                print("success");
+                              }).catchError((err) {
+                                print("$err");
+                              });
+                              Navigator.pop(context);
+                            },
+                            leading: Icon(Icons.delete),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  subtitle: Text(
-                    snapshot.child("address").value.toString(),
-                  ),
-                ),
-              );
-            },
-          ))
+                );
+              },
+            ),
+          )
           //For store data in realTime Database from app or
           //create Operation
         ],
